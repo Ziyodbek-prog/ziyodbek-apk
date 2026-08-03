@@ -1,0 +1,37 @@
+name: Build Android APK (Kivy)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Repositoriyadan kodingizni yuklab olish
+      uses: actions/checkout@v4
+
+    - name: Python 3.11 muhitini o'rnatish
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Kerakli Linux va Java dasturlarini o'rnatish
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev
+        pip install --upgrade pip
+        pip install buildozer cython==0.29.33 kivy
+
+    - name: Bulutli Ubuntu serverda Android APK build qilish
+      run: |
+        buildozer -v android debug
+
+    - name: Tayyor APK faylini GitHub Artifacts ga yuklash
+      uses: actions/upload-artifact@v4
+      with:
+        name: Ziyodbek-MultiTool-APK
+        path: bin/*.apk
+        
