@@ -1,0 +1,51 @@
+name: Build Android APK (Kivy)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Repositoriyadan kodingizni yuklab olish
+      uses: actions/checkout@v4
+
+    - name: Java JDK 17 o'rnatish
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Python 3.11 muhitini o'rnatish
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Kerakli Linux paketlarini o'rnatish
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev ccache
+        pip install --upgrade pip
+        pip install "cython<3.0.0" buildozer kivy
+
+    - name: Android SDK Litsenziyalarini avtomatik tasdiqlash
+      run: |
+        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        if [ -d "$ANDROID_HOME/licenses" ]; then
+          cp -r $ANDROID_HOME/licenses/* ~/.buildozer/android/platform/android-sdk/licenses/
+        fi
+        printf "2433370235555b91c7682842d00165bf0560b630\nd56f5187479451eabf01fb78af6dfcb131a6481e\n2433370235555b91c7682842d00165bf0560b630\n84831b94fe70306e3359b76982cb608257d6b336\n33b6a2b64607f11b759f320e633417f28292d0c5\n504667f4c05741e44f5d30a916736826054350ca\n" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+
+    - name: Bulutli Ubuntu serverda Android APK build qilish
+      run: |
+        buildozer -v android debug
+
+    - name: Tayyor APK faylini GitHub Artifacts ga yuklash
+      uses: actions/upload-artifact@v4
+      with:
+        name: Ziyodbek-MultiTool-APK
+        path: bin/*.apk
+        
